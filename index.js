@@ -1,6 +1,5 @@
 const { Telegraf } = require("telegraf");
 const { message } = require("telegraf/filters");
-const axios = require("axios");
 
 const bot = new Telegraf("7334361333:AAH9f0tf96gkg81M4MjxT48kQmiZDFu1OlM");
 
