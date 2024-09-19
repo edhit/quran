@@ -1,16 +1,30 @@
-const { Telegraf } = require("telegraf");
+require('dotenv').config()
+
+const { Telegraf, Markup, session } = require("telegraf");
 const { message } = require("telegraf/filters");
 
-const bot = new Telegraf("7334361333:AAH9f0tf96gkg81M4MjxT48kQmiZDFu1OlM");
+const bot = new Telegraf(process.env.BOT_TOKEN);
 
-bot.start((ctx) => ctx.reply("Welcome"));
-bot.help((ctx) => ctx.reply("Send me a sticker"));
-bot.on(message("sticker"), (ctx) => ctx.reply("👍"));
-bot.hears("hi", (ctx) => ctx.reply("Hey there"));
+const reader = ["husary", "muaiqly"]
 
+const buttons = Markup.keyboard([
+  reader
+]).resize()
+
+bot.use(session())
+bot.start((ctx) => ctx.reply("Welcome", buttons));
 bot.on(message("text"), async (ctx) => {
   const data = ctx.message.text;
 
+  if (reader.includes(data)) {
+    ctx.session = data
+    await ctx.reply('👍')
+    return
+  } else if (!ctx.session) {
+    ctx.session = reader[0]
+  }
+
+  console.log(ctx.session);
   if (data.indexOf(":") === -1) {
     await ctx.reply("Ошибка! Пиши так: 2:262,263,264");
     return;
@@ -22,8 +36,8 @@ bot.on(message("text"), async (ctx) => {
   const ayat = ayats.split(",");
 
   for (let index = 0; index < ayat.length; index++) {
-    if (Number(ayat[index])) {
-    let bbb
+    if (Number(ayat[index]) && Number(surah)) {
+      let bbb
       let aaa;
 
       if (surah.length === 1) bbb = `00${surah}`;
@@ -39,7 +53,7 @@ bot.on(message("text"), async (ctx) => {
           `https://cdn.islamic.network/quran/images/high-resolution/${surah}_${ayat[index]}.png`,
         );
         await ctx.replyWithAudio(
-            `https://tanzil.net/res/audio/husary/${bbb}${aaa}.mp3`,
+            `https://tanzil.net/res/audio/${ctx.session}/${bbb}${aaa}.mp3`,
           );
       } catch (error) {
         await ctx.reply(`Ошибка в поиске этого аята: ${ayat[index]}. Исправь!!!`);
