@@ -119,7 +119,7 @@ try {
         else aaa = `${ayat[index]}`;
 
         let post = await DB.findOne({ surah: surah, ayat: ayat[index] });
-        let icon = listSurah[surah].place === "Mecca" ? "🕋" : "🕌";
+        let icon = listSurah[surah - 1].place === "Mecca" ? "🕋" : "🕌";
         if (post) {
           await ctx.replyWithPhoto(post.photo.file_id);
           await ctx.replyWithAudio(post.audio.file_id, {
