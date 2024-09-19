@@ -1,0 +1,30 @@
+{
+    "ar":{
+       "start":"السلام عليكم ورحمة الله وبركاته! 👋",
+       "lang":"اختر اللغة 🗣",
+       "format":"خطأ!!! صيغة البحث عن الآية: (2:255) أو (2:255,256,257,258) 🛑",
+       "not_found":"خطأ!!! الآية غير موجودة 🛑",
+       "check":"صحح!!!"
+    },
+    "en":{
+       "start":"👋 Peace be upon you and the mercy of Allah and His blessings!",
+       "lang":"🗣 Choose a language",
+       "format":"🛑 Error!!! The format for searching an ayah: (2:255) or (2:255,256,257,258)",
+       "not_found":"🛑 Error!!! Ayah not found:",
+       "check":"Correct it!!!"
+    },
+    "ru":{
+       "start":"👋 Ассаляму алейкум уа рахматуллахи уа баракатух!",
+       "lang":"🗣 Выбери язык",
+       "format":"🛑 Ошибка!!! Формат поиска аяата: (2:255) или (2:255,256,257,258)",
+       "not_found":"🛑 Ошибка!!! Аят не найден:",
+       "check":"Исправь!!!"
+    },
+    "fr":{
+       "start":"👋 Assalamu alaykum wa rahmatullahi wa barakatuh!",
+       "lang":"🗣 Choisissez la langue",
+       "format":"🛑 Erreur !!! Le format de recherche du verset : (2:255) ou (2:255,256,257,258)",
+       "not_found":"🛑 Erreur !!! Verset non trouvé :",
+       "check":"Corrigez !!!"
+    }
+ }

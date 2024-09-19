@@ -1,98 +1,163 @@
-require('dotenv').config()
+require("dotenv").config();
 
 const { Telegraf, Markup, session } = require("telegraf");
 const { message } = require("telegraf/filters");
+const mongoose = require("mongoose");
+const Schema = mongoose.Schema;
 
-const bot = new Telegraf(process.env.BOT_TOKEN);
+try {
+  // GENERAL
+  const bot = new Telegraf(process.env.BOT_TOKEN);
+  mongoose.connect("mongodb://127.0.0.1:27017/quran");
 
-const reader = ["husary", "muaiqly"]
+  // DB MODEL
+  const model = new Schema({
+    surah: Number,
+    ayat: Number,
+    photo: {
+      file_id: String,
+    },
+    audio: {
+      file_id: String,
+    },
+  });
 
-const buttons = Markup.keyboard([
-  reader
-]).resize()
+  const user = new Schema({
+    telegram: Number,
+    username: String,
+  });
 
-bot.use(session())
-bot.start((ctx) => ctx.reply("Welcome", buttons));
-bot.on(message("text"), async (ctx) => {
-  const data = ctx.message.text;
+  // DATA FOR KEYBOARDS
+  const reader = ["husary", "muaiqly", "afasy"];
+  const lang = ["ar", "en", "ru", "fr"];
 
-  if (reader.includes(data)) {
-    ctx.session = data
-    await ctx.reply('👍')
-    return
-  } else if (!ctx.session) {
-    ctx.session = reader[0]
-  }
+  // JSONS
+  const text = require("./source/lang.json");
+  const listSurah = require("./source/surah.json");
+  const listReader = require("./source/reader.json");
 
-  console.log(ctx.session);
-  if (data.indexOf(":") === -1) {
-    await ctx.reply("Ошибка! Пиши так: 2:262,263,264");
-    return;
-  }
+  // KEYBOARDS
+  const keyboard_reader = Markup.keyboard([reader]).resize();
+  const keyboard_lang = Markup.keyboard([lang]).resize();
 
-  const surah = data.split(":")[0];
-  const ayats = data.split(":")[1];
+  // USER
+  bot.use(
+    session({ defaultSession: () => ({ reader: "husary", lang: "en" }) }),
+  );
+  bot.start(async (ctx) => {
+    const DB = mongoose.model("user", user);
 
-  const ayat = ayats.split(",");
+    await DB.findOneAndUpdate(
+      {
+        telegram: ctx.chat.id,
+      },
+      {
+        telegram: ctx.from.id,
+        username: ctx.from.username,
+      },
+      {
+        new: true,
+        upsert: true,
+      },
+    );
 
-  for (let index = 0; index < ayat.length; index++) {
-    if (Number(ayat[index]) && Number(surah)) {
-      let bbb
-      let aaa;
+    await ctx.reply(`${text[ctx.session.lang].start}`, keyboard_reader);
+  });
 
-      if (surah.length === 1) bbb = `00${surah}`;
-      else if (surah.length === 2) bbb = `0${surah}`;
-      else bbb = `${surah}`;
+  bot.command("lang", async (ctx) => {
+    await ctx.reply(`${text[ctx.session.lang].lang}`, keyboard_lang);
+  });
 
-      if (ayat[index].length === 1) aaa = `00${ayat[index]}`;
-      else if (ayat[index].length === 2) aaa = `0${ayat[index]}`;
-      else aaa = `${ayat[index]}`;
+  bot.on(message("text"), async (ctx) => {
+    const data = ctx.message.text;
 
-      try {
-        await ctx.replyWithPhoto(
-          `https://cdn.islamic.network/quran/images/high-resolution/${surah}_${ayat[index]}.png`,
-        );
-        await ctx.replyWithAudio(
-            `https://tanzil.net/res/audio/${ctx.session}/${bbb}${aaa}.mp3`,
-          );
-      } catch (error) {
-        await ctx.reply(`Ошибка в поиске этого аята: ${ayat[index]}. Исправь!!!`);
-        return 
-      }
-    } else{
-        await ctx.reply(`Ошибка в поиске этого аята: ${ayat[index]}. Исправь!!!`);
-        return
+    if (reader.includes(data)) {
+      ctx.session.reader = data;
+      await ctx.reply("👍");
+      return;
     }
-  }
 
-  //   for (let index = 0; index < ayat.length; index++) {
-  //     // if (Number(ayat[index])) {
-  //     //     let config = {
-  //     //         method: "get",
-  //     //         maxBodyLength: Infinity,
-  //     //         url: `https://api.alquran.cloud/v1/ayah/${surah}:${ayat[index]}/en.asad`,
-  //     //         headers: {
-  //     //           Accept: "application/json",
-  //     //         },
-  //     //       };
+    if (lang.includes(data)) {
+      ctx.session.lang = data;
+      await ctx.reply("👍");
+      return;
+    }
 
-  //     //       axios(config)
-  //     //         .then(async (response) => {
-  //     //           const result = response.data;
-  //     //           // console.log(result.data.number);
+    if (data.indexOf(":") === -1) {
+      await ctx.reply(text[ctx.session.lang].format);
+      return;
+    }
 
-  //     //           await this.delay(10000)
-  //     //         })
-  //     //         .catch(async (error) => {
-  //     //           await ctx.reply(`Ошибка в поиске этого аята: ${ayat[index]}`);
-  //     //           return;
-  //     //         });
-  //     // }
-  //   }
-});
+    const DB = mongoose.model(ctx.session.reader, model);
 
-bot.launch();
+    const surah = data.split(":")[0];
+    const ayats = data.split(":")[1];
 
-// Enable graceful stop
-process.once("SIGINT", () => bot.stop("SIGINT"));
-process.once("SIGTERM", () => bot.stop("SIGTERM"));
+    const ayat = ayats.split(",");
+
+    for (let index = 0; index < ayat.length; index++) {
+      if (Number(ayat[index]) && Number(surah)) {
+        let bbb;
+        let aaa;
+
+        if (surah.length === 1) bbb = `00${surah}`;
+        else if (surah.length === 2) bbb = `0${surah}`;
+        else bbb = `${surah}`;
+
+        if (ayat[index].length === 1) aaa = `00${ayat[index]}`;
+        else if (ayat[index].length === 2) aaa = `0${ayat[index]}`;
+        else aaa = `${ayat[index]}`;
+
+        let post = await DB.findOne({ surah: surah, ayat: ayat[index] });
+        let icon = listSurah[surah].place === "Mecca" ? "🕋" : "🕌";
+        if (post) {
+          await ctx.replyWithPhoto(post.photo.file_id);
+          await ctx.replyWithAudio(post.audio.file_id, {
+            caption: `${icon} Surah ${surah} «${listSurah[surah].title}», Ayat ${ayat[index]} - ${listReader[ctx.session.reader]}`,
+          });
+        } else {
+          try {
+            const photo = await ctx.replyWithPhoto(
+              `https://cdn.islamic.network/quran/images/high-resolution/${surah}_${ayat[index]}.png`,
+            );
+            const audio = await ctx.replyWithAudio(
+              `https://tanzil.net/res/audio/${ctx.session.reader}/${bbb}${aaa}.mp3`,
+              {
+                caption: `${icon} Surah ${surah} «${listSurah[surah].title}», Ayat ${ayat[index]} - ${listReader[ctx.session.reader]}`,
+              },
+            );
+
+            post = new DB({
+              surah: surah,
+              ayat: ayat[index],
+              photo: { file_id: photo.photo[photo.photo.length - 1].file_id },
+              audio: { file_id: audio.audio.file_id },
+            });
+
+            await post.save();
+          } catch (error) {
+            console.log(error);
+            await ctx.reply(
+              `${text[ctx.session.lang].not_found}: ${ayat[index]}. ${text[ctx.session.lang].check}`,
+            );
+            return;
+          }
+        }
+      } else {
+        await ctx.reply(
+          `${text[ctx.session.lang].not_found}: ${ayat[index]}. ${text[ctx.session.lang].check}`,
+        );
+        return;
+      }
+    }
+  });
+
+  // START BOT
+  bot.launch();
+
+  // Enable graceful stop
+  process.once("SIGINT", () => bot.stop("SIGINT"));
+  process.once("SIGTERM", () => bot.stop("SIGTERM"));
+} catch (error) {
+  console.log(error);
+}
