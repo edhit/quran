@@ -123,7 +123,7 @@ try {
         if (post) {
           await ctx.replyWithPhoto(post.photo.file_id);
           await ctx.replyWithAudio(post.audio.file_id, {
-            caption: `${icon} Surah ${surah} «${listSurah[surah].title}», Ayat ${ayat[index]} - ${listReader[ctx.session.reader]}`,
+            caption: `${icon} Surah ${surah} «${listSurah[surah - 1].title}», Ayat ${ayat[index]} - ${listReader[ctx.session.reader]}`,
           });
         } else {
           try {
@@ -133,7 +133,7 @@ try {
             const audio = await ctx.replyWithAudio(
               `https://tanzil.net/res/audio/${ctx.session.reader}/${bbb}${aaa}.mp3`,
               {
-                caption: `${icon} Surah ${surah} «${listSurah[surah].title}», Ayat ${ayat[index]} - ${listReader[ctx.session.reader]}`,
+                caption: `${icon} Surah ${surah} «${listSurah[surah - 1].title}», Ayat ${ayat[index]} - ${listReader[ctx.session.reader]}`,
               },
             );
 
