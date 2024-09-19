@@ -41,6 +41,16 @@ try {
   const keyboard_lang = Markup.keyboard([lang]).resize();
 
   // USER
+  bot.telegram.setMyCommands([
+    {
+      command: 'start',
+      description: 'Main page',
+    },
+    {
+      command: 'lang',
+      description: 'Language page',
+    }
+  ]);
   bot.use(
     session({ defaultSession: () => ({ reader: "husary", lang: "en" }) }),
   );
