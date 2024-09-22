@@ -163,7 +163,16 @@ try {
   });
 
   // START BOT
-  bot.launch();
+  if (process.env.WEBHOOK) {
+    bot.launch({
+      webhook: {
+        domain: process.env.URL,
+        port: process.env.PORT
+      }
+    })
+  } else {
+    bot.launch();
+  }
 
   // Enable graceful stop
   process.once("SIGINT", () => bot.stop("SIGINT"));
